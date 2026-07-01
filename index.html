@@ -6,6 +6,11 @@
   <meta name="description" content="Premium Recruitment Filtering Dashboard for Candidate Resumes">
   <title>RecruitSync | Resume Filtering Dashboard</title>
   <link rel="stylesheet" href="style.css">
+  <!-- PDF.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+  </script>
 </head>
 <body>
 
@@ -58,103 +63,28 @@
         <input type="text" id="search-input" placeholder="Search by name...">
       </div>
 
-      <!-- Core Recruitment Criteria Filters -->
-      <div class="filter-group">
-        <div class="filter-group-title">Recruitment Competencies</div>
-        <div class="checkbox-list">
-          <label class="checkbox-item">
-            <input type="checkbox" class="criteria-checkbox" value="endToEnd">
-            <div class="checkbox-custom"></div>
-            End-to-End Recruitment
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" class="criteria-checkbox" value="talentAcquisition">
-            <div class="checkbox-custom"></div>
-            Talent Acquisition
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" class="criteria-checkbox" value="bulkHiring">
-            <div class="checkbox-custom"></div>
-            Bulk Hiring
-          </label>
-        </div>
+      <!-- Dynamic Filters Container -->
+      <div id="dynamic-filters-container">
+        <!-- Will be loaded dynamically from active criteria -->
       </div>
 
-      <!-- Job Levels / Workforce Segment Filters -->
-      <div class="filter-group">
-        <div class="filter-group-title">Workforce Segments</div>
-        <div class="checkbox-list">
-          <label class="checkbox-item">
-            <input type="checkbox" class="criteria-checkbox" value="whiteCollar">
-            <div class="checkbox-custom"></div>
-            White Collar
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" class="criteria-checkbox" value="blueCollar">
-            <div class="checkbox-custom"></div>
-            Blue Collar
-          </label>
-        </div>
-      </div>
+      <!-- Manage Criteria & Reset Buttons -->
+      <button id="btn-manage-criteria" class="sidebar-action-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.43l-1.003.828c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.43l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+        </svg>
+        Manage Criteria
+      </button>
 
-      <!-- Tools & Channels Filters -->
-      <div class="filter-group">
-        <div class="filter-group-title">Recruitment Tools</div>
-        <div class="checkbox-list">
-          <label class="checkbox-item">
-            <input type="checkbox" class="criteria-checkbox" value="ats">
-            <div class="checkbox-custom"></div>
-            ATS Systems
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" class="criteria-checkbox" value="linkedinRecruiter">
-            <div class="checkbox-custom"></div>
-            LinkedIn Recruiter
-          </label>
-        </div>
-      </div>
+      <button id="btn-reset-app" class="sidebar-action-btn" style="background-color: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--color-danger); margin-bottom: 1.5rem;">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+        </svg>
+        Reset App Data
+      </button>
 
-      <!-- Industry Domain Filters -->
-      <div class="filter-group">
-        <div class="filter-group-title">Industry Specializations</div>
-        <div class="checkbox-list">
-          <label class="checkbox-item">
-            <input type="checkbox" class="criteria-checkbox" value="construction">
-            <div class="checkbox-custom"></div>
-            Construction
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" class="criteria-checkbox" value="interiorFitOut">
-            <div class="checkbox-custom"></div>
-            Interior Fit-Out
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" class="criteria-checkbox" value="joinery">
-            <div class="checkbox-custom"></div>
-            Joinery
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" class="criteria-checkbox" value="mep">
-            <div class="checkbox-custom"></div>
-            MEP
-          </label>
-        </div>
-      </div>
-
-      <!-- Regional Filters -->
-      <div class="filter-group">
-        <div class="filter-group-title">Geography</div>
-        <div class="checkbox-list">
-          <label class="checkbox-item">
-            <input type="checkbox" class="criteria-checkbox" value="uaeExperience">
-            <div class="checkbox-custom"></div>
-            UAE Experience
-          </label>
-        </div>
-      </div>
-
-      <!-- Reset Button -->
-      <button id="reset-filters" style="margin-top: auto; background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--color-danger); padding: 0.75rem; border-radius: var(--radius-md); font-family: var(--font-family); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: var(--transition);">
+      <button id="reset-filters" style="margin-top: auto; background-color: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: var(--text-muted); padding: 0.75rem; border-radius: var(--radius-md); font-family: var(--font-family); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: var(--transition);">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
           <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
         </svg>
@@ -172,6 +102,23 @@
           <option value="name">Sort by Name</option>
         </select>
       </div>
+
+      <!-- Upload Area -->
+      <div class="upload-container">
+        <div class="upload-zone" id="upload-zone">
+          <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
+          </svg>
+          <div class="upload-text">Upload Resume (PDF, TXT)</div>
+          <div class="upload-subtext">Drag & drop or click to browse</div>
+          <input type="file" id="file-input" accept=".pdf,.txt" style="display: none;">
+        </div>
+        <div class="upload-status" id="upload-status">
+          <div class="spinner" id="upload-spinner"></div>
+          <span id="upload-status-text">Parsing resume...</span>
+        </div>
+      </div>
+
       <div class="candidates-list-scroll" id="candidates-container">
         <!-- Candidate Cards will be injected here -->
       </div>
@@ -191,41 +138,123 @@
 
   </div>
 
+  <!-- Criteria Manager Modal -->
+  <div class="modal-backdrop" id="criteria-modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 20px; height: 20px; color: var(--color-primary);">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+          </svg>
+          Manage Recruitment Criteria
+        </h3>
+        <button class="modal-close" id="btn-close-criteria-modal">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 18px; height: 18px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="criteria-list-container" id="modal-criteria-list">
+          <!-- Criteria list injected here -->
+        </div>
+        
+        <form class="criteria-form" id="criteria-form" onsubmit="event.preventDefault();">
+          <div class="form-title">Add New Criterion</div>
+          <div class="form-group-row">
+            <div class="form-group">
+              <label for="new-criterion-label">Display Name</label>
+              <input type="text" id="new-criterion-label" placeholder="e.g. Python Developer" required>
+            </div>
+            <div class="form-group">
+              <label for="new-criterion-key">Unique Key (letters only)</label>
+              <input type="text" id="new-criterion-key" placeholder="e.g. pythonDev" pattern="[a-zA-Z]+" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="new-criterion-keywords">Keywords (Comma Separated)</label>
+            <input type="text" id="new-criterion-keywords" placeholder="e.g. python, django, flask, fastapi" required>
+          </div>
+          <button type="button" class="btn-add-criterion" id="btn-add-criterion">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 16px; height: 16px;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Add Criterion
+          </button>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal-action cancel" id="btn-cancel-criteria">Cancel</button>
+        <button class="btn-modal-action save" id="btn-save-criteria">Save & Apply Changes</button>
+      </div>
+    </div>
+  </div>
+
   <script src="data.js"></script>
   <script>
-    // Constants for Criteria Display Names
-    const criteriaLabels = {
-      endToEnd: "End-to-End Recruitment",
-      talentAcquisition: "Talent Acquisition",
-      whiteCollar: "White Collar",
-      blueCollar: "Blue Collar",
-      bulkHiring: "Bulk Hiring",
-      ats: "ATS Systems",
-      linkedinRecruiter: "LinkedIn Recruiter",
-      construction: "Construction Industry",
-      interiorFitOut: "Interior Fit-Out",
-      joinery: "Joinery Specialization",
-      mep: "MEP Recruitment",
-      uaeExperience: "UAE Experience"
-    };
+    // State initialization
+    let criteria = [];
+    let candidates = [];
+    let currentSelectedId = null;
+
+    function initAppState() {
+      const storedCriteria = localStorage.getItem("recruitment_criteria");
+      const storedCandidates = localStorage.getItem("recruitment_candidates");
+
+      if (storedCriteria) {
+        criteria = JSON.parse(storedCriteria);
+      } else {
+        criteria = [...defaultCriteria];
+        localStorage.setItem("recruitment_criteria", JSON.stringify(criteria));
+      }
+
+      if (storedCandidates) {
+        candidates = JSON.parse(storedCandidates);
+      } else {
+        candidates = [...candidatesData];
+        localStorage.setItem("recruitment_candidates", JSON.stringify(candidates));
+      }
+    }
 
     // DOM Elements
     const candidatesContainer = document.getElementById("candidates-container");
     const detailsContainer = document.getElementById("details-container");
     const searchInput = document.getElementById("search-input");
-    const criteriaCheckboxes = document.querySelectorAll(".criteria-checkbox");
     const sortSelect = document.getElementById("sort-select");
     const resetFiltersBtn = document.getElementById("reset-filters");
     const totalCountEl = document.getElementById("total-resumes-count");
     const visibleCountEl = document.getElementById("visible-resumes-count");
 
-    let currentSelectedId = null;
+    // Modal elements
+    const criteriaModalBackdrop = document.getElementById("criteria-modal-backdrop");
+    const btnManageCriteria = document.getElementById("btn-manage-criteria");
+    const btnCloseCriteriaModal = document.getElementById("btn-close-criteria-modal");
+    const btnCancelCriteria = document.getElementById("btn-cancel-criteria");
+    const btnSaveCriteria = document.getElementById("btn-save-criteria");
+    const btnAddCriterion = document.getElementById("btn-add-criterion");
+    const modalCriteriaList = document.getElementById("modal-criteria-list");
+    const newCriterionLabel = document.getElementById("new-criterion-label");
+    const newCriterionKey = document.getElementById("new-criterion-key");
+    const newCriterionKeywords = document.getElementById("new-criterion-keywords");
+    const btnResetApp = document.getElementById("btn-reset-app");
 
-    // Calculate Candidate Match Score based on selected options or overall matching rate
+    // Upload elements
+    const uploadZone = document.getElementById("upload-zone");
+    const fileInput = document.getElementById("file-input");
+    const uploadStatus = document.getElementById("upload-status");
+    const uploadStatusText = document.getElementById("upload-status-text");
+    const uploadSpinner = document.getElementById("upload-spinner");
+
+    // Calculate candidate match score dynamically based on active criteria
     function calculateScore(candidate) {
-      const criteriaList = Object.keys(candidate.criteriaMatches);
-      const matches = criteriaList.filter(c => candidate.criteriaMatches[c]);
-      return Math.round((matches.length / criteriaList.length) * 100);
+      if (criteria.length === 0) return 0;
+      let matches = 0;
+      criteria.forEach(c => {
+        if (candidate.criteriaMatches[c.key] === true) {
+          matches++;
+        }
+      });
+      return Math.round((matches / criteria.length) * 100);
     }
 
     // Get color code class for scores
@@ -235,30 +264,84 @@
       return "score-low";
     }
 
-    // Main render list function
-    function renderCandidates() {
-      // 1. Get search query
-      const query = searchInput.value.toLowerCase().trim();
+    // Render filter checkboxes dynamically grouped by category
+    function renderFilters() {
+      const container = document.getElementById("dynamic-filters-container");
+      container.innerHTML = "";
 
-      // 2. Get active criteria filters
+      const grouped = {};
+      criteria.forEach(c => {
+        const categoryName = c.category || "Custom Criteria";
+        if (!grouped[categoryName]) {
+          grouped[categoryName] = [];
+        }
+        grouped[categoryName].push(c);
+      });
+
+      Object.keys(grouped).forEach(cat => {
+        const filterGroup = document.createElement("div");
+        filterGroup.className = "filter-group";
+
+        const groupTitle = document.createElement("div");
+        groupTitle.className = "filter-group-title";
+        groupTitle.textContent = cat;
+        filterGroup.appendChild(groupTitle);
+
+        const checkboxList = document.createElement("div");
+        checkboxList.className = "checkbox-list";
+
+        grouped[cat].forEach(c => {
+          const label = document.createElement("label");
+          label.className = "checkbox-item";
+
+          const input = document.createElement("input");
+          input.type = "checkbox";
+          input.className = "criteria-checkbox";
+          input.value = c.key;
+          input.addEventListener("change", renderCandidates);
+
+          // Auto-close filters drawer when a checkbox changes on mobile
+          input.addEventListener("change", () => {
+            if (window.innerWidth <= 768) {
+              closeFiltersDrawer();
+            }
+          });
+
+          const customBox = document.createElement("div");
+          customBox.className = "checkbox-custom";
+
+          label.appendChild(input);
+          label.appendChild(customBox);
+          label.appendChild(document.createTextNode(c.label));
+          checkboxList.appendChild(label);
+        });
+
+        filterGroup.appendChild(checkboxList);
+        container.appendChild(filterGroup);
+      });
+    }
+
+    // Main render candidates list function
+    function renderCandidates() {
+      const query = searchInput.value.toLowerCase().trim();
       const activeFilters = [];
+      const criteriaCheckboxes = document.querySelectorAll(".criteria-checkbox");
+      
       criteriaCheckboxes.forEach(cb => {
         if (cb.checked) activeFilters.push(cb.value);
       });
 
-      // 3. Filter candidates
-      const filtered = candidatesData.filter(candidate => {
-        // Name filter
+      const filtered = candidates.filter(candidate => {
         const matchesName = candidate.name.toLowerCase().includes(query) || 
                             candidate.title.toLowerCase().includes(query);
         
-        // Criteria filters (Must match ALL checked criteria)
-        const matchesCriteria = activeFilters.every(filterKey => candidate.criteriaMatches[filterKey]);
+        // Candidates must match ALL active checkbox criteria
+        const matchesCriteria = activeFilters.every(filterKey => candidate.criteriaMatches[filterKey] === true);
 
         return matchesName && matchesCriteria;
       });
 
-      // 4. Sort candidates
+      // Sort
       const sortBy = sortSelect.value;
       filtered.sort((a, b) => {
         if (sortBy === "score") {
@@ -271,11 +354,9 @@
         return 0;
       });
 
-      // 5. Update counts
-      totalCountEl.textContent = candidatesData.length;
+      totalCountEl.textContent = candidates.length;
       visibleCountEl.textContent = filtered.length;
 
-      // 6. Output to container
       candidatesContainer.innerHTML = "";
       if (filtered.length === 0) {
         candidatesContainer.innerHTML = `
@@ -296,13 +377,14 @@
         card.setAttribute("data-id", candidate.id);
         card.onclick = () => selectCandidate(candidate.id);
 
-        // Tags to show in list card
+        // Tags to show in list card (Render first 3 matched criteria dynamically)
         const keyTags = [];
-        if (candidate.criteriaMatches.uaeExperience) keyTags.push("UAE");
-        if (candidate.criteriaMatches.construction) keyTags.push("Construction");
-        if (candidate.criteriaMatches.mep) keyTags.push("MEP");
-        if (candidate.criteriaMatches.joinery) keyTags.push("Joinery");
-        if (candidate.criteriaMatches.bulkHiring) keyTags.push("Bulk");
+        criteria.forEach(c => {
+          if (candidate.criteriaMatches[c.key] === true && keyTags.length < 3) {
+            const shortTag = c.label.split(" ")[0];
+            keyTags.push(shortTag);
+          }
+        });
 
         card.innerHTML = `
           <div class="card-top">
@@ -327,14 +409,13 @@
           </div>
           <div class="card-tags">
             ${keyTags.map(tag => `<span class="card-tag match">${tag}</span>`).join('')}
-            ${candidate.criteriaMatches.blueCollar ? '<span class="card-tag">Blue Collar</span>' : ''}
-            ${candidate.criteriaMatches.whiteCollar ? '<span class="card-tag">White Collar</span>' : ''}
+            ${candidate.criteriaMatches.blueCollar === true ? '<span class="card-tag">Blue Collar</span>' : ''}
+            ${candidate.criteriaMatches.whiteCollar === true ? '<span class="card-tag">White Collar</span>' : ''}
           </div>
         `;
         candidatesContainer.appendChild(card);
       });
 
-      // If active candidate is filtered out, clear selection
       if (currentSelectedId && !filtered.find(c => c.id === currentSelectedId)) {
         showEmptyState();
       }
@@ -358,7 +439,6 @@
     function selectCandidate(id) {
       currentSelectedId = id;
       
-      // Update card active states
       const cards = document.querySelectorAll(".candidate-card");
       cards.forEach(card => {
         if (card.getAttribute("data-id") === id) {
@@ -368,23 +448,20 @@
         }
       });
 
-      const candidate = candidatesData.find(c => c.id === id);
+      const candidate = candidates.find(c => c.id === id);
       if (!candidate) return;
 
       detailsContainer.classList.add("active-details");
 
       const score = calculateScore(candidate);
-      
-      // Stroke dashoffset logic for score gauge circle (r=36, circumference=226.19)
       const circumference = 2 * Math.PI * 36;
       const strokeOffset = circumference - (score / 100) * circumference;
 
-      // Construct criteria HTML breakdown
+      // Construct criteria HTML breakdown dynamically
       let criteriaHTML = "";
-      Object.keys(criteriaLabels).forEach(key => {
-        const isMatched = candidate.criteriaMatches[key];
-        const label = criteriaLabels[key];
-        const justification = candidate.justifications[key] || "No explicit mention on resume.";
+      criteria.forEach(c => {
+        const isMatched = candidate.criteriaMatches[c.key] === true;
+        const justification = candidate.justifications[c.key] || "No keywords found in resume.";
 
         criteriaHTML += `
           <div class="match-row-item">
@@ -400,14 +477,13 @@
               `}
             </div>
             <div class="match-details">
-              <div class="match-criterion-name" style="color: ${isMatched ? 'var(--text-main)' : 'rgba(255,255,255,0.3)'}">${label}</div>
+              <div class="match-criterion-name" style="color: ${isMatched ? 'var(--text-main)' : 'rgba(255,255,255,0.3)'}">${c.label}</div>
               <div class="match-criterion-justification" style="color: ${isMatched ? 'var(--text-muted)' : 'rgba(255,255,255,0.2)'}">${justification}</div>
             </div>
           </div>
         `;
       });
 
-      // Construct Language badges
       const languagesHTML = candidate.languages.map(lang => `<span class="info-badge">${lang}</span>`).join('');
 
       detailsContainer.innerHTML = `
@@ -513,27 +589,384 @@
       `;
     }
 
-    // Filter event listeners
-    searchInput.addEventListener("input", renderCandidates);
-    sortSelect.addEventListener("change", renderCandidates);
-    criteriaCheckboxes.forEach(cb => {
-      cb.addEventListener("change", renderCandidates);
+    // Criteria Manager Modal Controls
+    let localCriteriaCopy = [];
+
+    function renderModalCriteriaList() {
+      modalCriteriaList.innerHTML = "";
+      if (localCriteriaCopy.length === 0) {
+        modalCriteriaList.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 1rem;">No criteria defined. Add some below.</div>`;
+        return;
+      }
+
+      localCriteriaCopy.forEach((c, index) => {
+        const item = document.createElement("div");
+        item.className = "criteria-list-item";
+
+        const info = document.createElement("div");
+        info.className = "criteria-item-info";
+
+        const label = document.createElement("div");
+        label.className = "criteria-item-label";
+        label.textContent = `${c.label} (${c.key})`;
+        info.appendChild(label);
+
+        const keywordsContainer = document.createElement("div");
+        keywordsContainer.className = "criteria-item-keywords";
+        c.keywords.forEach(kw => {
+          const badge = document.createElement("span");
+          badge.className = "keyword-badge";
+          badge.textContent = kw;
+          keywordsContainer.appendChild(badge);
+        });
+        info.appendChild(keywordsContainer);
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "btn-delete-criterion";
+        deleteBtn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 16px; height: 16px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+          </svg>
+        `;
+        deleteBtn.onclick = () => {
+          localCriteriaCopy.splice(index, 1);
+          renderModalCriteriaList();
+        };
+
+        item.appendChild(info);
+        item.appendChild(deleteBtn);
+        modalCriteriaList.appendChild(item);
+      });
+    }
+
+    btnManageCriteria.addEventListener("click", () => {
+      localCriteriaCopy = JSON.parse(JSON.stringify(criteria));
+      renderModalCriteriaList();
+      criteriaModalBackdrop.classList.add("active");
     });
 
-    // Reset button handler
-    resetFiltersBtn.addEventListener("click", () => {
-      searchInput.value = "";
-      criteriaCheckboxes.forEach(cb => cb.checked = false);
-      sortSelect.value = "score";
+    function closeCriteriaModal() {
+      criteriaModalBackdrop.classList.remove("active");
+      // Clear form
+      newCriterionLabel.value = "";
+      newCriterionKey.value = "";
+      newCriterionKeywords.value = "";
+    }
+
+    btnCloseCriteriaModal.addEventListener("click", closeCriteriaModal);
+    btnCancelCriteria.addEventListener("click", closeCriteriaModal);
+
+    btnAddCriterion.addEventListener("click", () => {
+      const labelVal = newCriterionLabel.value.trim();
+      let keyVal = newCriterionKey.value.trim().replace(/[^a-zA-Z]/g, ""); // strip anything but letters
+      const keywordsVal = newCriterionKeywords.value.trim();
+
+      if (!labelVal || !keyVal || !keywordsVal) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      // Check key uniqueness
+      if (localCriteriaCopy.find(c => c.key === keyVal)) {
+        alert("This Unique Key already exists. Please choose another.");
+        return;
+      }
+
+      const keywordsArray = keywordsVal.split(",").map(kw => kw.trim()).filter(kw => kw.length > 0);
+
+      localCriteriaCopy.push({
+        key: keyVal,
+        label: labelVal,
+        category: "Custom Criteria",
+        keywords: keywordsArray
+      });
+
+      // Clear inputs
+      newCriterionLabel.value = "";
+      newCriterionKey.value = "";
+      newCriterionKeywords.value = "";
+
+      renderModalCriteriaList();
+    });
+
+    btnSaveCriteria.addEventListener("click", () => {
+      // Apply the local changes back to global state
+      criteria = JSON.parse(JSON.stringify(localCriteriaCopy));
+      localStorage.setItem("recruitment_criteria", JSON.stringify(criteria));
+
+      // Clean up candidates criteriaMatches if they don't exist anymore or add empty ones
+      candidates.forEach(cand => {
+        const cleanedMatches = {};
+        const cleanedJustifications = {};
+        criteria.forEach(c => {
+          cleanedMatches[c.key] = cand.criteriaMatches[c.key] !== undefined ? cand.criteriaMatches[c.key] : false;
+          cleanedJustifications[c.key] = cand.justifications[c.key] !== undefined ? cand.justifications[c.key] : "No keywords matched.";
+        });
+        cand.criteriaMatches = cleanedMatches;
+        cand.justifications = cleanedJustifications;
+      });
+
+      localStorage.setItem("recruitment_candidates", JSON.stringify(candidates));
+
+      renderFilters();
       renderCandidates();
-      showEmptyState();
-      
-      // Close mobile filters drawer on reset
-      document.querySelector(".sidebar").classList.remove("sidebar-open");
-      document.getElementById("sidebar-backdrop").classList.remove("active");
+      if (currentSelectedId) {
+        selectCandidate(currentSelectedId);
+      }
+      closeCriteriaModal();
     });
 
-    // Mobile specific layout interaction logic
+    // Reset app back to default mock data
+    btnResetApp.addEventListener("click", () => {
+      if (confirm("Are you sure you want to reset all candidate profiles and criteria to default? Your uploaded resumes and custom criteria will be deleted.")) {
+        localStorage.removeItem("recruitment_criteria");
+        localStorage.removeItem("recruitment_candidates");
+        location.reload();
+      }
+    });
+
+    // Resume drag and drop handlers
+    uploadZone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      uploadZone.classList.add("dragover");
+    });
+
+    uploadZone.addEventListener("dragleave", () => {
+      uploadZone.classList.remove("dragover");
+    });
+
+    uploadZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove("dragover");
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        handleResumeUpload(files[0]);
+      }
+    });
+
+    uploadZone.addEventListener("click", () => {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener("change", (e) => {
+      const files = e.target.files;
+      if (files.length > 0) {
+        handleResumeUpload(files[0]);
+        fileInput.value = ""; // clear so we can re-upload same file
+      }
+    });
+
+    // Helper: find sentence containing keyword
+    function findSentenceWithKeyword(text, keyword) {
+      const sentences = text.split(/[.!?\n]/);
+      const cleanKeyword = keyword.toLowerCase();
+      for (let s of sentences) {
+        const cleanSentence = s.trim();
+        if (cleanSentence.toLowerCase().includes(cleanKeyword)) {
+          if (cleanSentence.length > 150) {
+            return cleanSentence.substring(0, 150) + "...";
+          }
+          return cleanSentence;
+        }
+      }
+      return null;
+    }
+
+    // Core parsing and evaluation engine
+    async function handleResumeUpload(file) {
+      const isPDF = file.type === "application/pdf" || file.name.endsWith(".pdf");
+      const isTXT = file.type === "text/plain" || file.name.endsWith(".txt");
+
+      if (!isPDF && !isTXT) {
+        showStatus("Only PDF and TXT files are supported.", "error");
+        return;
+      }
+
+      showStatus("Reading file...", "loading");
+
+      try {
+        let textContent = "";
+
+        if (isTXT) {
+          textContent = await readTextFile(file);
+        } else {
+          textContent = await readPDFFile(file);
+        }
+
+        if (!textContent.trim()) {
+          throw new Error("Could not extract any text from the file.");
+        }
+
+        showStatus("Analyzing competencies...", "loading");
+
+        // Simple Regex Parser for Candidate Info
+        const lines = textContent.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+        let name = "";
+        let title = "Candidate Profile (Uploaded)";
+
+        if (lines.length > 0) {
+          if (lines[0].length < 50 && !lines[0].includes("@")) {
+            name = lines[0];
+          }
+        }
+        if (lines.length > 1 && !name) {
+          if (lines[1].length < 50 && !lines[1].includes("@")) {
+            name = lines[1];
+          }
+        }
+
+        // Fallback name from file name
+        if (!name) {
+          name = file.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
+          name = name.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+        }
+
+        // Find potential job title
+        const possibleTitles = lines.filter(l => l.length > 10 && l.length < 60 && !l.includes("@") && !l.includes("+") && !l.includes("Page"));
+        if (possibleTitles.length > 1) {
+          title = possibleTitles[1]; // skip name line
+        }
+
+        // Email parsing
+        const emailMatch = textContent.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+        const email = emailMatch ? emailMatch[0] : `${name.toLowerCase().replace(/\s/g, "")}@recruit.sync`;
+
+        // Phone parsing
+        const phoneMatch = textContent.match(/\+?[0-9\s-]{9,15}/);
+        const phone = phoneMatch ? phoneMatch[0].trim() : "+971-50-000-0000";
+
+        // Exp parsing
+        const expMatch = textContent.match(/(\d+)\+?\s*(years|yrs)\s*(of)?\s*(experience|exp)/i);
+        const experience = expMatch ? parseInt(expMatch[1]) : Math.floor(Math.random() * 6) + 3; // default to random 3-8 yrs
+
+        // Summary parsing
+        let summary = "";
+        const profileIndex = lines.findIndex(l => l.toLowerCase().includes("summary") || l.toLowerCase().includes("profile") || l.toLowerCase().includes("objective"));
+        if (profileIndex !== -1 && lines.length > profileIndex + 1) {
+          summary = lines[profileIndex + 1];
+        }
+        if (!summary || summary.length < 35) {
+          const longLines = lines.filter(l => l.length > 60 && !l.includes("@"));
+          if (longLines.length > 0) {
+            summary = longLines[0];
+          } else {
+            summary = "Dynamic and results-driven professional seeking a challenging recruitment and operations role in a corporate setup.";
+          }
+        }
+        if (summary.length > 250) {
+          summary = summary.substring(0, 250) + "...";
+        }
+
+        // Match Criteria
+        const criteriaMatches = {};
+        const justifications = {};
+
+        criteria.forEach(c => {
+          let matched = false;
+          let matchedKw = "";
+          let sentence = null;
+
+          for (let keyword of c.keywords) {
+            // Case insensitive word search
+            const regex = new RegExp("\\b" + keyword.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "\\b", "i");
+            if (regex.test(textContent) || textContent.toLowerCase().includes(keyword.toLowerCase())) {
+              matched = true;
+              matchedKw = keyword;
+              sentence = findSentenceWithKeyword(textContent, keyword);
+              break;
+            }
+          }
+
+          criteriaMatches[c.key] = matched;
+          if (matched) {
+            justifications[c.key] = sentence 
+              ? `Mentioned: "${sentence}"` 
+              : `Explicitly matched keyword "${matchedKw}" on resume.`;
+          } else {
+            justifications[c.key] = `No keywords like [${c.keywords.join(", ")}] found in the candidate resume text.`;
+          }
+        });
+
+        // Add candidate
+        const newCandidate = {
+          id: "uploaded_" + Date.now(),
+          name: name,
+          title: title,
+          email: email,
+          phone: phone,
+          location: "Dubai, UAE",
+          experience: experience,
+          education: "Degree/Certification from resume",
+          languages: ["English"],
+          summary: summary,
+          criteriaMatches: criteriaMatches,
+          justifications: justifications
+        };
+
+        candidates.push(newCandidate);
+        localStorage.setItem("recruitment_candidates", JSON.stringify(candidates));
+
+        showStatus(`Candidate "${name}" uploaded successfully!`, "success");
+        renderCandidates();
+        selectCandidate(newCandidate.id);
+        
+      } catch (err) {
+        console.error(err);
+        showStatus("Error parsing resume: " + err.message, "error");
+      }
+    }
+
+    function readTextFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsText(file);
+      });
+    }
+
+    function readPDFFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          try {
+            const arrayBuffer = reader.result;
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            let text = "";
+            for (let i = 1; i <= pdf.numPages; i++) {
+              const page = await pdf.getPage(i);
+              const content = await page.getTextContent();
+              const strings = content.items.map(item => item.str);
+              text += strings.join(" ") + "\n";
+            }
+            resolve(text);
+          } catch (e) {
+            reject(e);
+          }
+        };
+        reader.onerror = () => reject(reader.error);
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    function showStatus(msg, type) {
+      uploadStatus.className = `upload-status ${type}`;
+      uploadStatusText.textContent = msg;
+
+      if (type === "loading") {
+        uploadSpinner.style.display = "block";
+      } else {
+        uploadSpinner.style.display = "none";
+      }
+
+      if (type === "success" || type === "error") {
+        setTimeout(() => {
+          uploadStatus.className = "upload-status";
+        }, 5000);
+      }
+    }
+
+    // Mobile layout drawer interactions
     const mobileFilterToggle = document.getElementById("mobile-filter-toggle");
     const closeFiltersMobile = document.getElementById("close-filters-mobile");
     const sidebarBackdrop = document.getElementById("sidebar-backdrop");
@@ -552,7 +985,6 @@
     closeFiltersMobile.addEventListener("click", closeFiltersDrawer);
     sidebarBackdrop.addEventListener("click", closeFiltersDrawer);
 
-    // Close details drawer function (called from back button on mobile)
     function closeDetails() {
       detailsContainer.classList.remove("active-details");
       currentSelectedId = null;
@@ -560,16 +992,13 @@
       cards.forEach(card => card.classList.remove("active"));
     }
 
-    // Auto-close filters drawer when a checkbox changes on mobile
-    criteriaCheckboxes.forEach(cb => {
-      cb.addEventListener("change", () => {
-        if (window.innerWidth <= 768) {
-          closeFiltersDrawer();
-        }
-      });
-    });
+    // Add search listener
+    searchInput.addEventListener("input", renderCandidates);
+    sortSelect.addEventListener("change", renderCandidates);
 
-    // Initial render
+    // Initial load
+    initAppState();
+    renderFilters();
     renderCandidates();
   </script>
 </body>

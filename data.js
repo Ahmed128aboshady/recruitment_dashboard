@@ -1,3 +1,18 @@
+const defaultCriteria = [
+  { key: "endToEnd", label: "End-to-End Recruitment", category: "Recruitment Competencies", keywords: ["end-to-end", "end to end", "full lifecycle", "full cycle", "full-cycle", "sourcing to onboarding", "screening till onboarding"] },
+  { key: "talentAcquisition", label: "Talent Acquisition", category: "Recruitment Competencies", keywords: ["talent acquisition", "ta specialist", "recruiter", "recruitment specialist", "talent recruiter", "headhunting", "headhunter"] },
+  { key: "bulkHiring", label: "Bulk Hiring", category: "Recruitment Competencies", keywords: ["bulk hiring", "mass hiring", "high volume", "high-volume", "volume recruitment", "large scale", "large-scale"] },
+  { key: "whiteCollar", label: "White Collar", category: "Workforce Segments", keywords: ["white collar", "white-collar", "corporate hiring", "executive recruitment", "head office", "c-suite", "administrative role"] },
+  { key: "blueCollar", label: "Blue Collar", category: "Workforce Segments", keywords: ["blue collar", "blue-collar", "general worker", "labor", "labour", "technician", "driver", "operator", "bulk worker"] },
+  { key: "ats", label: "ATS Systems", category: "Recruitment Tools", keywords: ["ats", "applicant tracking", "ceipal", "ramco", "oracle hcm", "avature", "eightfold", "workday", "greenhouse", "zoho recruit", "taleo", "smartrecruiters", "odoo"] },
+  { key: "linkedinRecruiter", label: "LinkedIn Recruiter", category: "Recruitment Tools", keywords: ["linkedin recruiter", "linkedin sourcing", "boolean search", "recruiter seat", "linkedin portal"] },
+  { key: "construction", label: "Construction", category: "Industry Specializations", keywords: ["construction", "real estate", "developer", "realty", "property", "cut & bend", "ready-mix", "infrastructure"] },
+  { key: "interiorFitOut", label: "Interior Fit-Out", category: "Industry Specializations", keywords: ["interior fit-out", "fit out", "fit-out", "interior design"] },
+  { key: "joinery", label: "Joinery", category: "Industry Specializations", keywords: ["joiner", "joinery", "carpenter", "carpentry", "woodwork"] },
+  { key: "mep", label: "MEP", category: "Industry Specializations", keywords: ["mep", "mechanical electrical", "hvac", "facility management", "plumbing", "electrical engineer"] },
+  { key: "uaeExperience", label: "UAE Experience", category: "Geography", keywords: ["uae", "dubai", "abu dhabi", "sharjah", "mohre", "gdrfa", "nafis", "emiratization", "gulf"] }
+];
+
 const candidatesData = [
   {
     id: "c1",
