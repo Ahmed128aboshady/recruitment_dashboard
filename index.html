@@ -111,7 +111,7 @@
           </svg>
           <div class="upload-text">Upload Resume (PDF, TXT)</div>
           <div class="upload-subtext">Drag & drop or click to browse</div>
-          <input type="file" id="file-input" accept=".pdf,.txt" style="display: none;">
+          <input type="file" id="file-input" accept=".pdf,.txt" multiple style="display: none;">
         </div>
         <div class="upload-status" id="upload-status">
           <div class="spinner" id="upload-spinner"></div>
@@ -754,7 +754,7 @@
       uploadZone.classList.remove("dragover");
       const files = e.dataTransfer.files;
       if (files.length > 0) {
-        handleResumeUpload(files[0]);
+        handleMultipleResumesUpload(files);
       }
     });
 
@@ -765,7 +765,7 @@
     fileInput.addEventListener("change", (e) => {
       const files = e.target.files;
       if (files.length > 0) {
-        handleResumeUpload(files[0]);
+        handleMultipleResumesUpload(files);
         fileInput.value = ""; // clear so we can re-upload same file
       }
     });
@@ -786,148 +786,168 @@
       return null;
     }
 
-    // Core parsing and evaluation engine
-    async function handleResumeUpload(file) {
+    // Core parsing and evaluation engine for multiple files
+    async function handleMultipleResumesUpload(files) {
+      if (files.length === 0) return;
+      let successCount = 0;
+      let errorCount = 0;
+      let lastUploadedId = null;
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        showStatus(`Parsing resume ${i + 1} of ${files.length} (${file.name})...`, "loading");
+        try {
+          const candidateId = await processSingleResume(file);
+          if (candidateId) {
+            successCount++;
+            lastUploadedId = candidateId;
+          }
+        } catch (err) {
+          console.error(err);
+          errorCount++;
+        }
+      }
+
+      if (errorCount === 0) {
+        showStatus(`Successfully uploaded ${successCount} resume(s)!`, "success");
+      } else {
+        showStatus(`Uploaded ${successCount} resume(s) with ${errorCount} error(s).`, "error");
+      }
+
+      renderCandidates();
+      if (lastUploadedId) {
+        selectCandidate(lastUploadedId);
+      }
+    }
+
+    // Process a single resume (internal helper)
+    async function processSingleResume(file) {
       const isPDF = file.type === "application/pdf" || file.name.endsWith(".pdf");
       const isTXT = file.type === "text/plain" || file.name.endsWith(".txt");
 
       if (!isPDF && !isTXT) {
-        showStatus("Only PDF and TXT files are supported.", "error");
-        return;
+        throw new Error("Only PDF and TXT files are supported.");
       }
 
-      showStatus("Reading file...", "loading");
+      let textContent = "";
+      if (isTXT) {
+        textContent = await readTextFile(file);
+      } else {
+        textContent = await readPDFFile(file);
+      }
 
-      try {
-        let textContent = "";
+      if (!textContent.trim()) {
+        throw new Error("Could not extract any text from the file.");
+      }
 
-        if (isTXT) {
-          textContent = await readTextFile(file);
+      // Simple Regex Parser for Candidate Info
+      const lines = textContent.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+      let name = "";
+      let title = "Candidate Profile (Uploaded)";
+
+      if (lines.length > 0) {
+        if (lines[0].length < 50 && !lines[0].includes("@")) {
+          name = lines[0];
+        }
+      }
+      if (lines.length > 1 && !name) {
+        if (lines[1].length < 50 && !lines[1].includes("@")) {
+          name = lines[1];
+        }
+      }
+
+      // Fallback name from file name
+      if (!name) {
+        name = file.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
+        name = name.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+      }
+
+      // Find potential job title
+      const possibleTitles = lines.filter(l => l.length > 10 && l.length < 60 && !l.includes("@") && !l.includes("+") && !l.includes("Page"));
+      if (possibleTitles.length > 1) {
+        title = possibleTitles[1]; // skip name line
+      }
+
+      // Email parsing
+      const emailMatch = textContent.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+      const email = emailMatch ? emailMatch[0] : `${name.toLowerCase().replace(/\s/g, "")}@recruit.sync`;
+
+      // Phone parsing
+      const phoneMatch = textContent.match(/\+?[0-9\s-]{9,15}/);
+      const phone = phoneMatch ? phoneMatch[0].trim() : "+971-50-000-0000";
+
+      // Exp parsing
+      const expMatch = textContent.match(/(\d+)\+?\s*(years|yrs)\s*(of)?\s*(experience|exp)/i);
+      const experience = expMatch ? parseInt(expMatch[1]) : Math.floor(Math.random() * 6) + 3; // default to random 3-8 yrs
+
+      // Summary parsing
+      let summary = "";
+      const profileIndex = lines.findIndex(l => l.toLowerCase().includes("summary") || l.toLowerCase().includes("profile") || l.toLowerCase().includes("objective"));
+      if (profileIndex !== -1 && lines.length > profileIndex + 1) {
+        summary = lines[profileIndex + 1];
+      }
+      if (!summary || summary.length < 35) {
+        const longLines = lines.filter(l => l.length > 60 && !l.includes("@"));
+        if (longLines.length > 0) {
+          summary = longLines[0];
         } else {
-          textContent = await readPDFFile(file);
+          summary = "Dynamic and results-driven professional seeking a challenging recruitment and operations role in a corporate setup.";
         }
-
-        if (!textContent.trim()) {
-          throw new Error("Could not extract any text from the file.");
-        }
-
-        showStatus("Analyzing competencies...", "loading");
-
-        // Simple Regex Parser for Candidate Info
-        const lines = textContent.split("\n").map(l => l.trim()).filter(l => l.length > 0);
-        let name = "";
-        let title = "Candidate Profile (Uploaded)";
-
-        if (lines.length > 0) {
-          if (lines[0].length < 50 && !lines[0].includes("@")) {
-            name = lines[0];
-          }
-        }
-        if (lines.length > 1 && !name) {
-          if (lines[1].length < 50 && !lines[1].includes("@")) {
-            name = lines[1];
-          }
-        }
-
-        // Fallback name from file name
-        if (!name) {
-          name = file.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
-          name = name.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
-        }
-
-        // Find potential job title
-        const possibleTitles = lines.filter(l => l.length > 10 && l.length < 60 && !l.includes("@") && !l.includes("+") && !l.includes("Page"));
-        if (possibleTitles.length > 1) {
-          title = possibleTitles[1]; // skip name line
-        }
-
-        // Email parsing
-        const emailMatch = textContent.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
-        const email = emailMatch ? emailMatch[0] : `${name.toLowerCase().replace(/\s/g, "")}@recruit.sync`;
-
-        // Phone parsing
-        const phoneMatch = textContent.match(/\+?[0-9\s-]{9,15}/);
-        const phone = phoneMatch ? phoneMatch[0].trim() : "+971-50-000-0000";
-
-        // Exp parsing
-        const expMatch = textContent.match(/(\d+)\+?\s*(years|yrs)\s*(of)?\s*(experience|exp)/i);
-        const experience = expMatch ? parseInt(expMatch[1]) : Math.floor(Math.random() * 6) + 3; // default to random 3-8 yrs
-
-        // Summary parsing
-        let summary = "";
-        const profileIndex = lines.findIndex(l => l.toLowerCase().includes("summary") || l.toLowerCase().includes("profile") || l.toLowerCase().includes("objective"));
-        if (profileIndex !== -1 && lines.length > profileIndex + 1) {
-          summary = lines[profileIndex + 1];
-        }
-        if (!summary || summary.length < 35) {
-          const longLines = lines.filter(l => l.length > 60 && !l.includes("@"));
-          if (longLines.length > 0) {
-            summary = longLines[0];
-          } else {
-            summary = "Dynamic and results-driven professional seeking a challenging recruitment and operations role in a corporate setup.";
-          }
-        }
-        if (summary.length > 250) {
-          summary = summary.substring(0, 250) + "...";
-        }
-
-        // Match Criteria
-        const criteriaMatches = {};
-        const justifications = {};
-
-        criteria.forEach(c => {
-          let matched = false;
-          let matchedKw = "";
-          let sentence = null;
-
-          for (let keyword of c.keywords) {
-            // Case insensitive word search
-            const regex = new RegExp("\\b" + keyword.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "\\b", "i");
-            if (regex.test(textContent) || textContent.toLowerCase().includes(keyword.toLowerCase())) {
-              matched = true;
-              matchedKw = keyword;
-              sentence = findSentenceWithKeyword(textContent, keyword);
-              break;
-            }
-          }
-
-          criteriaMatches[c.key] = matched;
-          if (matched) {
-            justifications[c.key] = sentence 
-              ? `Mentioned: "${sentence}"` 
-              : `Explicitly matched keyword "${matchedKw}" on resume.`;
-          } else {
-            justifications[c.key] = `No keywords like [${c.keywords.join(", ")}] found in the candidate resume text.`;
-          }
-        });
-
-        // Add candidate
-        const newCandidate = {
-          id: "uploaded_" + Date.now(),
-          name: name,
-          title: title,
-          email: email,
-          phone: phone,
-          location: "Dubai, UAE",
-          experience: experience,
-          education: "Degree/Certification from resume",
-          languages: ["English"],
-          summary: summary,
-          criteriaMatches: criteriaMatches,
-          justifications: justifications
-        };
-
-        candidates.push(newCandidate);
-        localStorage.setItem("recruitment_candidates", JSON.stringify(candidates));
-
-        showStatus(`Candidate "${name}" uploaded successfully!`, "success");
-        renderCandidates();
-        selectCandidate(newCandidate.id);
-        
-      } catch (err) {
-        console.error(err);
-        showStatus("Error parsing resume: " + err.message, "error");
       }
+      if (summary.length > 250) {
+        summary = summary.substring(0, 250) + "...";
+      }
+
+      // Match Criteria
+      const criteriaMatches = {};
+      const justifications = {};
+
+      criteria.forEach(c => {
+        let matched = false;
+        let matchedKw = "";
+        let sentence = null;
+
+        for (let keyword of c.keywords) {
+          // Case insensitive word search
+          const regex = new RegExp("\\b" + keyword.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "\\b", "i");
+          if (regex.test(textContent) || textContent.toLowerCase().includes(keyword.toLowerCase())) {
+            matched = true;
+            matchedKw = keyword;
+            sentence = findSentenceWithKeyword(textContent, keyword);
+            break;
+          }
+        }
+
+        criteriaMatches[c.key] = matched;
+        if (matched) {
+          justifications[c.key] = sentence 
+            ? `Mentioned: "${sentence}"` 
+            : `Explicitly matched keyword "${matchedKw}" on resume.`;
+        } else {
+          justifications[c.key] = `No keywords like [${c.keywords.join(", ")}] found in the candidate resume text.`;
+        }
+      });
+
+      // Add candidate
+      const newCandidate = {
+        id: "uploaded_" + Date.now() + "_" + Math.floor(Math.random() * 1000), // ensure uniqueness in batch
+        name: name,
+        title: title,
+        email: email,
+        phone: phone,
+        location: "Dubai, UAE",
+        experience: experience,
+        education: "Degree/Certification from resume",
+        languages: ["English"],
+        summary: summary,
+        criteriaMatches: criteriaMatches,
+        justifications: justifications
+      };
+
+      candidates.push(newCandidate);
+      localStorage.setItem("recruitment_candidates", JSON.stringify(candidates));
+
+      return newCandidate.id;
     }
 
     function readTextFile(file) {
