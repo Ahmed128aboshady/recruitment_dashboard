@@ -752,7 +752,7 @@
     uploadZone.addEventListener("drop", (e) => {
       e.preventDefault();
       uploadZone.classList.remove("dragover");
-      const files = e.dataTransfer.files;
+      const files = Array.from(e.dataTransfer.files);
       if (files.length > 0) {
         handleMultipleResumesUpload(files);
       }
@@ -763,7 +763,7 @@
     });
 
     fileInput.addEventListener("change", (e) => {
-      const files = e.target.files;
+      const files = Array.from(e.target.files);
       if (files.length > 0) {
         handleMultipleResumesUpload(files);
         fileInput.value = ""; // clear so we can re-upload same file
