@@ -1266,3 +1266,27 @@ header {
   box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
 }
 
+/* Card Delete Button */
+.btn-delete-candidate {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  opacity: 0;
+}
+
+.candidate-card:hover .btn-delete-candidate, .candidate-card.active .btn-delete-candidate {
+  opacity: 1;
+}
+
+.btn-delete-candidate:hover {
+  color: var(--color-danger);
+  background-color: var(--color-danger-bg);
+}
+
