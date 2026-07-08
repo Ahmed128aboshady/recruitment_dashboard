@@ -77,6 +77,14 @@
         Manage Criteria
       </button>
 
+      <!-- Batch History Section -->
+      <div class="sidebar-section" style="margin-top: 1rem; margin-bottom: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
+        <div class="filter-group-title" style="margin-bottom: 0.25rem;">Batch History</div>
+        <div class="history-list" id="history-list">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+
       <button id="btn-reset-app" class="sidebar-action-btn" style="background-color: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--color-danger); margin-bottom: 1.5rem;">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
@@ -94,13 +102,27 @@
 
     <!-- Center Section: Candidate Cards List -->
     <main class="list-panel">
+      <!-- Archive Warning Banner -->
+      <div id="archive-banner" class="archive-banner" style="display: none;">
+        <span>⚠️ Viewing Archived Batch: <strong id="archive-banner-name">Batch Name</strong> (Read-Only)</span>
+        <button onclick="viewBatch('active')" class="btn-return-active">Return to Active</button>
+      </div>
+
       <div class="list-header">
         <h2>Candidates</h2>
-        <select id="sort-select" class="sort-select">
-          <option value="score">Sort by Score</option>
-          <option value="experience">Sort by Experience</option>
-          <option value="name">Sort by Name</option>
-        </select>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <button id="btn-archive-batch" class="btn-archive-batch" onclick="confirmAndArchiveBatch()">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 14px; height: 14px;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+            Confirm Batch
+          </button>
+          <select id="sort-select" class="sort-select">
+            <option value="score">Sort by Score</option>
+            <option value="experience">Sort by Experience</option>
+            <option value="name">Sort by Name</option>
+          </select>
+        </div>
       </div>
 
       <!-- Upload Area -->
@@ -195,11 +217,23 @@
     // State initialization
     let criteria = [];
     let candidates = [];
+    let historyBatches = [];
+    let currentBatchId = "active"; // "active" or a specific batch.id
     let currentSelectedId = null;
+
+    function loadCandidatesForCurrentMode() {
+      if (currentBatchId === "active") {
+        const storedCandidates = localStorage.getItem("recruitment_candidates");
+        candidates = storedCandidates ? JSON.parse(storedCandidates) : [];
+      } else {
+        const batch = historyBatches.find(b => b.id === currentBatchId);
+        candidates = batch ? batch.candidates : [];
+      }
+    }
 
     function initAppState() {
       const storedCriteria = localStorage.getItem("recruitment_criteria");
-      const storedCandidates = localStorage.getItem("recruitment_candidates");
+      const storedHistory = localStorage.getItem("recruitment_history_batches");
 
       if (storedCriteria) {
         criteria = JSON.parse(storedCriteria);
@@ -208,12 +242,19 @@
         localStorage.setItem("recruitment_criteria", JSON.stringify(criteria));
       }
 
-      if (storedCandidates) {
-        candidates = JSON.parse(storedCandidates);
+      if (storedHistory) {
+        historyBatches = JSON.parse(storedHistory);
       } else {
-        candidates = [...candidatesData];
-        localStorage.setItem("recruitment_candidates", JSON.stringify(candidates));
+        historyBatches = [];
+        localStorage.setItem("recruitment_history_batches", JSON.stringify(historyBatches));
       }
+
+      if (!localStorage.getItem("recruitment_candidates")) {
+        localStorage.setItem("recruitment_candidates", JSON.stringify([...candidatesData]));
+      }
+
+      currentBatchId = "active";
+      loadCandidatesForCurrentMode();
     }
 
     // DOM Elements
@@ -224,6 +265,7 @@
     const resetFiltersBtn = document.getElementById("reset-filters");
     const totalCountEl = document.getElementById("total-resumes-count");
     const visibleCountEl = document.getElementById("visible-resumes-count");
+    const historyListEl = document.getElementById("history-list");
 
     // Modal elements
     const criteriaModalBackdrop = document.getElementById("criteria-modal-backdrop");
@@ -323,6 +365,29 @@
 
     // Main render candidates list function
     function renderCandidates() {
+      // Toggle upload container, archive banner, and archive button based on current batch mode
+      const uploadContainerEl = document.querySelector(".upload-container");
+      const archiveBannerEl = document.getElementById("archive-banner");
+      const archiveBannerNameEl = document.getElementById("archive-banner-name");
+      const btnArchiveBatchEl = document.getElementById("btn-archive-batch");
+
+      if (currentBatchId === "active") {
+        uploadContainerEl.style.display = "block";
+        archiveBannerEl.style.display = "none";
+        btnArchiveBatchEl.style.display = "flex";
+        
+        // Disable archiving if there are no candidates in the active batch
+        const storedCandidates = localStorage.getItem("recruitment_candidates");
+        const activeCandidatesCount = storedCandidates ? JSON.parse(storedCandidates).length : 0;
+        btnArchiveBatchEl.disabled = activeCandidatesCount === 0;
+      } else {
+        uploadContainerEl.style.display = "none";
+        archiveBannerEl.style.display = "flex";
+        const currentBatch = historyBatches.find(b => b.id === currentBatchId);
+        archiveBannerNameEl.textContent = currentBatch ? currentBatch.name : "Archive";
+        btnArchiveBatchEl.style.display = "none";
+      }
+
       const query = searchInput.value.toLowerCase().trim();
       const activeFilters = [];
       const criteriaCheckboxes = document.querySelectorAll(".criteria-checkbox");
@@ -732,9 +797,10 @@
 
     // Reset app back to default mock data
     btnResetApp.addEventListener("click", () => {
-      if (confirm("Are you sure you want to reset all candidate profiles and criteria to default? Your uploaded resumes and custom criteria will be deleted.")) {
+      if (confirm("Are you sure you want to reset all candidate profiles, criteria, and batch history to default? Your uploaded resumes, custom criteria, and archived batches will be deleted.")) {
         localStorage.removeItem("recruitment_criteria");
         localStorage.removeItem("recruitment_candidates");
+        localStorage.removeItem("recruitment_history_batches");
         location.reload();
       }
     });
@@ -1005,11 +1071,140 @@
       if (!cand) return;
       if (confirm(`Are you sure you want to delete the profile of ${cand.name}?`)) {
         candidates = candidates.filter(c => c.id !== id);
-        localStorage.setItem("recruitment_candidates", JSON.stringify(candidates));
+        if (currentBatchId === "active") {
+          localStorage.setItem("recruitment_candidates", JSON.stringify(candidates));
+        } else {
+          const batch = historyBatches.find(b => b.id === currentBatchId);
+          if (batch) {
+            batch.candidates = candidates;
+            localStorage.setItem("recruitment_history_batches", JSON.stringify(historyBatches));
+          }
+        }
         renderCandidates();
         if (currentSelectedId === id) {
           showEmptyState();
         }
+      }
+    }
+
+    // Batch History Functions
+    function renderHistoryList() {
+      if (!historyListEl) return;
+      historyListEl.innerHTML = "";
+
+      // 1. Current Active Batch item
+      const activeItem = document.createElement("div");
+      activeItem.className = `history-item ${currentBatchId === 'active' ? 'active' : ''}`;
+      activeItem.onclick = () => viewBatch('active');
+      
+      const storedCandidates = localStorage.getItem("recruitment_candidates");
+      const activeCandidatesCount = storedCandidates ? JSON.parse(storedCandidates).length : 0;
+
+      activeItem.innerHTML = `
+        <div class="history-item-details">
+          <div style="display: flex; align-items: center; gap: 0.35rem;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--color-success); display: inline-block;"></span>
+            <strong>Current Active Batch</strong>
+          </div>
+          <span class="history-item-meta">${activeCandidatesCount} resumes loaded</span>
+        </div>
+      `;
+      historyListEl.appendChild(activeItem);
+
+      // 2. Saved history batches
+      historyBatches.forEach(batch => {
+        const item = document.createElement("div");
+        item.className = `history-item ${currentBatchId === batch.id ? 'active' : ''}`;
+        item.onclick = () => viewBatch(batch.id);
+
+        const formattedDate = new Date(batch.date).toLocaleDateString(undefined, {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        item.innerHTML = `
+          <div class="history-item-details">
+            <strong>${batch.name}</strong>
+            <span class="history-item-meta">${formattedDate} • ${batch.candidates.length} candidates</span>
+          </div>
+          <button class="btn-delete-batch" title="Delete Batch" onclick="event.stopPropagation(); deleteHistoryBatch('${batch.id}')">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 13px; height: 13px;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+            </svg>
+          </button>
+        `;
+        historyListEl.appendChild(item);
+      });
+    }
+
+    function confirmAndArchiveBatch() {
+      if (currentBatchId !== "active") return;
+      
+      const storedCandidates = localStorage.getItem("recruitment_candidates");
+      const activeCandidates = storedCandidates ? JSON.parse(storedCandidates) : [];
+      
+      if (activeCandidates.length === 0) {
+        alert("There are no candidates in the current active batch to archive.");
+        return;
+      }
+
+      const defaultName = `Batch - ${new Date().toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}`;
+      const batchName = prompt("Enter a name for this batch:", defaultName);
+      
+      if (batchName === null) return;
+      
+      const trimmedName = batchName.trim() || defaultName;
+
+      const newBatch = {
+        id: "batch_" + Date.now(),
+        name: trimmedName,
+        date: new Date().toISOString(),
+        candidates: activeCandidates
+      };
+
+      historyBatches.push(newBatch);
+      localStorage.setItem("recruitment_history_batches", JSON.stringify(historyBatches));
+
+      // Clear active candidates
+      localStorage.setItem("recruitment_candidates", JSON.stringify([]));
+
+      // Switch to active
+      currentBatchId = "active";
+      loadCandidatesForCurrentMode();
+      
+      showEmptyState();
+      renderCandidates();
+      renderHistoryList();
+
+      showStatus(`Batch "${trimmedName}" archived successfully. A new batch has started.`, "success");
+    }
+
+    function viewBatch(batchId) {
+      currentBatchId = batchId;
+      loadCandidatesForCurrentMode();
+      showEmptyState();
+      renderCandidates();
+      renderHistoryList();
+    }
+
+    function deleteHistoryBatch(batchId) {
+      const batch = historyBatches.find(b => b.id === batchId);
+      if (!batch) return;
+
+      if (confirm(`Are you sure you want to delete "${batch.name}" from batch history? This cannot be undone.`)) {
+        historyBatches = historyBatches.filter(b => b.id !== batchId);
+        localStorage.setItem("recruitment_history_batches", JSON.stringify(historyBatches));
+        
+        if (currentBatchId === batchId) {
+          currentBatchId = "active";
+          loadCandidatesForCurrentMode();
+          showEmptyState();
+        }
+        
+        renderCandidates();
+        renderHistoryList();
       }
     }
 
@@ -1047,6 +1242,7 @@
     initAppState();
     renderFilters();
     renderCandidates();
+    renderHistoryList();
   </script>
 </body>
 </html>
