@@ -85,6 +85,26 @@
         </div>
       </div>
 
+      <!-- Backup & Share Section -->
+      <div class="sidebar-section" style="margin-top: 0.5rem; margin-bottom: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
+        <div class="filter-group-title" style="margin-bottom: 0.25rem;">Backup & Share</div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button id="btn-export-data" class="sidebar-action-btn" style="flex: 1; margin-top: 0; padding: 0.5rem;" onclick="exportAppState()">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 14px; height: 14px;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            Export
+          </button>
+          <button id="btn-import-data" class="sidebar-action-btn" style="flex: 1; margin-top: 0; padding: 0.5rem;" onclick="triggerImport()">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 14px; height: 14px;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+            </svg>
+            Import
+          </button>
+        </div>
+        <input type="file" id="import-file-input" accept=".json" style="display: none;" onchange="importAppState(event)">
+      </div>
+
       <button id="btn-reset-app" class="sidebar-action-btn" style="background-color: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--color-danger); margin-bottom: 1.5rem;">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
@@ -1206,6 +1226,71 @@
         renderCandidates();
         renderHistoryList();
       }
+    }
+
+    // Backup & Share functions
+    function exportAppState() {
+      const data = {
+        criteria: criteria,
+        candidates: JSON.parse(localStorage.getItem("recruitment_candidates") || "[]"),
+        historyBatches: historyBatches
+      };
+      
+      const jsonString = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonString], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement("a");
+      const timestamp = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `recruitsync_data_${timestamp}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      showStatus("Data exported successfully!", "success");
+    }
+
+    function triggerImport() {
+      document.getElementById("import-file-input").click();
+    }
+
+    function importAppState(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const importedData = JSON.parse(e.target.result);
+          
+          if (!importedData.criteria && !importedData.candidates && !importedData.historyBatches) {
+            throw new Error("Invalid backup file format.");
+          }
+
+          if (confirm("Importing this backup will overwrite your current active candidates, custom criteria, and batch history. Are you sure you want to proceed?")) {
+            if (importedData.criteria) {
+              localStorage.setItem("recruitment_criteria", JSON.stringify(importedData.criteria));
+            }
+            if (importedData.candidates) {
+              localStorage.setItem("recruitment_candidates", JSON.stringify(importedData.candidates));
+            }
+            if (importedData.historyBatches) {
+              localStorage.setItem("recruitment_history_batches", JSON.stringify(importedData.historyBatches));
+            }
+            
+            showStatus("Backup imported successfully! Reloading...", "success");
+            setTimeout(() => {
+              location.reload();
+            }, 1000);
+          }
+        } catch (err) {
+          alert("Error importing file: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = ""; // clear so we can import again
     }
 
     // Mobile layout drawer interactions
