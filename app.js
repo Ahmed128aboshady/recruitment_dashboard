@@ -1613,14 +1613,22 @@ let activeExtractedCriteria = [];
 
 if (btnExtractJd) {
   btnExtractJd.addEventListener("click", () => {
-    jdModalBackdrop.style.display = "flex";
+    jdModalBackdrop.classList.add("active");
     resetJdModal();
+  });
+}
+
+if (jdModalBackdrop) {
+  jdModalBackdrop.addEventListener("click", (e) => {
+    if (e.target === jdModalBackdrop) {
+      closeJdModal();
+    }
   });
 }
 
 function closeJdModal() {
   if (jdModalBackdrop) {
-    jdModalBackdrop.style.display = "none";
+    jdModalBackdrop.classList.remove("active");
   }
 }
 
