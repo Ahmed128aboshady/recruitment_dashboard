@@ -1478,6 +1478,291 @@ tierTabs.forEach(tab => {
   });
 });
 
+// JD Criteria Extraction Templates
+const jdTemplates = [
+  {
+    key: "genderFemale",
+    label: "Female Candidates Only",
+    category: "Strict Universal Filters",
+    keywords: ["she", "her", "hers", "female", "woman", "ms", "mrs", "miss", "lady"],
+    detectPatterns: [/female/i, /women/i, /lady/i, /ladies/i]
+  },
+  {
+    key: "genderMale",
+    label: "Male Candidates Only",
+    category: "Strict Universal Filters",
+    keywords: ["he", "him", "his", "male", "man", "mr"],
+    detectPatterns: [/\bmale\b/i, /\bman\b/i, /\bmen\b/i]
+  },
+  {
+    key: "driversLicense",
+    label: "Valid Driver's License",
+    category: "Strict Universal Filters",
+    keywords: ["driver's license", "driving license", "valid license", "own car", "driving"],
+    detectPatterns: [/driver/i, /license/i, /driving/i, /travel/i, /car/i]
+  },
+  {
+    key: "exhibitionsExp",
+    label: "Exhibitions/Events Experience",
+    category: "Industry Specializations",
+    keywords: ["exhibition", "exhibitions", "stands", "booth", "events", "expo", "trade shows", "fit-out"],
+    detectPatterns: [/exhibition/i, /event/i, /trade show/i, /booth/i, /stand/i, /expo/i]
+  },
+  {
+    key: "b2bSales",
+    label: "B2B Sales Experience",
+    category: "Core Skills",
+    keywords: ["b2b", "b2b sales", "corporate sales", "business to business"],
+    detectPatterns: [/b2b/i, /business to business/i, /corporate sales/i, /cold call/i, /prospect/i]
+  },
+  {
+    key: "closingNegotiation",
+    label: "Closing & Negotiation",
+    category: "Core Skills",
+    keywords: ["negotiation", "closing deals", "proposal", "rfq", "tender", "negotiating"],
+    detectPatterns: [/negotiat/i, /clos/i, /tender/i, /proposal/i, /rfq/i]
+  },
+  {
+    key: "crmSystems",
+    label: "CRM & Sales Tools",
+    category: "Core Skills",
+    keywords: ["crm", "hubspot", "salesforce", "zoho", "pipedrive", "odoo"],
+    detectPatterns: [/crm/i, /salesforce/i, /hubspot/i, /zoho/i, /pipedrive/i, /odoo/i]
+  },
+  {
+    key: "strategicPlanning",
+    label: "Strategic Planning",
+    category: "Manager Skills",
+    keywords: ["strategic planning", "forecasting", "sales target", "revenue growth"],
+    detectPatterns: [/strategic/i, /forecast/i, /target/i, /revenue/i, /growth/i]
+  },
+  {
+    key: "russianSpeaking",
+    label: "Russian Speaking",
+    category: "Languages",
+    keywords: ["russian", "русский"],
+    detectPatterns: [/russian/i]
+  },
+  {
+    key: "arabicSpeaking",
+    label: "Arabic Speaking",
+    category: "Languages",
+    keywords: ["arabic", "العربية"],
+    detectPatterns: [/arabic/i]
+  },
+  {
+    key: "englishProficiency",
+    label: "English Proficiency",
+    category: "Languages",
+    keywords: ["english", "fluent english", "excellent english"],
+    detectPatterns: [/english/i]
+  },
+  {
+    key: "frenchSpeaking",
+    label: "French Speaking",
+    category: "Languages",
+    keywords: ["french", "français"],
+    detectPatterns: [/french/i]
+  },
+  {
+    key: "bachelorsDegree",
+    label: "Bachelor's Degree Required",
+    category: "Qualifications",
+    keywords: ["bachelor", "degree", "university", "graduate", "b.sc", "b.a", "bba"],
+    detectPatterns: [/bachelor/i, /degree/i, /university/i, /graduate/i]
+  },
+  {
+    key: "mastersDegree",
+    label: "MBA/Master's Degree",
+    category: "Qualifications",
+    keywords: ["mba", "master", "postgraduate", "m.sc", "m.a"],
+    detectPatterns: [/mba/i, /master/i, /postgraduate/i]
+  },
+  {
+    key: "projectManagement",
+    label: "Project Management",
+    category: "Core Skills",
+    keywords: ["project management", "project manager", "pmp", "handover", "scheduling"],
+    detectPatterns: [/project management/i, /project manager/i, /pmp/i, /handover/i, /estimation/i]
+  },
+  {
+    key: "marketResearch",
+    label: "Market Research Skills",
+    category: "Core Skills",
+    keywords: ["market research", "competitor analysis", "market trends", "insights"],
+    detectPatterns: [/market research/i, /competitor/i, /market trends/i, /insight/i]
+  },
+  {
+    key: "microsoftOffice",
+    label: "MS Office Proficiency",
+    category: "Technical Skills",
+    keywords: ["microsoft office", "excel", "powerpoint", "word", "ms office"],
+    detectPatterns: [/office/i, /excel/i, /powerpoint/i, /word/i]
+  }
+];
+
+// JD Extractor DOM elements
+const btnExtractJd = document.getElementById("btn-extract-jd");
+const jdModalBackdrop = document.getElementById("jd-modal-backdrop");
+const jdTextInput = document.getElementById("jd-text-input");
+const jdInputView = document.getElementById("jd-input-view");
+const jdResultsView = document.getElementById("jd-results-view");
+const jdChecklistContainer = document.getElementById("jd-checklist-container");
+
+let activeExtractedCriteria = [];
+
+if (btnExtractJd) {
+  btnExtractJd.addEventListener("click", () => {
+    jdModalBackdrop.style.display = "flex";
+    resetJdModal();
+  });
+}
+
+function closeJdModal() {
+  if (jdModalBackdrop) {
+    jdModalBackdrop.style.display = "none";
+  }
+}
+
+function resetJdModal() {
+  if (jdTextInput) jdTextInput.value = "";
+  if (jdInputView) jdInputView.style.display = "block";
+  if (jdResultsView) jdResultsView.style.display = "none";
+  if (jdChecklistContainer) jdChecklistContainer.innerHTML = "";
+}
+
+function analyzeJobDescription() {
+  if (!jdTextInput) return;
+  const text = jdTextInput.value.trim();
+  if (!text) {
+    alert("Please paste a job description first.");
+    return;
+  }
+  
+  if (!jdChecklistContainer) return;
+  jdChecklistContainer.innerHTML = "";
+  activeExtractedCriteria = [];
+  
+  jdTemplates.forEach(tpl => {
+    let isMatched = false;
+    for (const pattern of tpl.detectPatterns) {
+      if (pattern.test(text)) {
+        isMatched = true;
+        break;
+      }
+    }
+    
+    activeExtractedCriteria.push({
+      template: tpl,
+      checked: isMatched
+    });
+  });
+  
+  activeExtractedCriteria.forEach((item, index) => {
+    const tpl = item.template;
+    const div = document.createElement("div");
+    div.style.display = "flex";
+    div.style.alignItems = "flex-start";
+    div.style.gap = "0.75rem";
+    div.style.padding = "0.75rem";
+    div.style.borderRadius = "var(--radius-sm)";
+    div.style.backgroundColor = item.checked ? "rgba(59, 130, 246, 0.05)" : "transparent";
+    div.style.border = "1px solid " + (item.checked ? "rgba(59, 130, 246, 0.2)" : "transparent");
+    div.style.transition = "all 0.2s ease";
+    
+    div.innerHTML = `
+      <input type="checkbox" id="jd-check-${index}" ${item.checked ? 'checked' : ''} style="margin-top: 0.2rem; cursor: pointer;" onchange="toggleExtractedCriterion(${index}, this.checked)">
+      <div style="display: flex; flex-direction: column; gap: 0.15rem; flex: 1; cursor: pointer;" onclick="document.getElementById('jd-check-${index}').click()">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <strong style="font-size: 0.85rem; color: var(--text-main);">${tpl.label}</strong>
+          <span style="font-size: 0.7rem; background-color: rgba(255,255,255,0.05); padding: 0.1rem 0.4rem; border-radius: var(--radius-sm); color: var(--text-muted); font-weight: 600;">${tpl.category}</span>
+        </div>
+        <span style="font-size: 0.75rem; color: var(--text-muted);">Keywords: ${tpl.keywords.join(", ")}</span>
+      </div>
+    `;
+    jdChecklistContainer.appendChild(div);
+  });
+  
+  if (jdInputView) jdInputView.style.display = "none";
+  if (jdResultsView) jdResultsView.style.display = "flex";
+}
+
+function toggleExtractedCriterion(index, isChecked) {
+  if (activeExtractedCriteria[index]) {
+    activeExtractedCriteria[index].checked = isChecked;
+  }
+  if (jdChecklistContainer) {
+    const row = jdChecklistContainer.children[index];
+    if (row) {
+      if (isChecked) {
+        row.style.backgroundColor = "rgba(59, 130, 246, 0.05)";
+        row.style.border = "1px solid rgba(59, 130, 246, 0.2)";
+      } else {
+        row.style.backgroundColor = "transparent";
+        row.style.border = "1px solid transparent";
+      }
+    }
+  }
+}
+
+function applyExtractedCriteria() {
+  const toAdd = activeExtractedCriteria.filter(item => item.checked).map(item => item.template);
+  if (toAdd.length === 0) {
+    alert("Please select at least one criterion to apply.");
+    return;
+  }
+  
+  let addedCount = 0;
+  toAdd.forEach(tpl => {
+    const exists = criteria.some(c => c.key === tpl.key);
+    if (!exists) {
+      criteria.push({
+        key: tpl.key,
+        label: tpl.label,
+        category: tpl.category,
+        keywords: [...tpl.keywords]
+      });
+      addedCount++;
+    }
+  });
+  
+  if (addedCount > 0) {
+    // Sync matches for candidates
+    candidates.forEach(cand => {
+      criteria.forEach(c => {
+        if (cand.criteriaMatches[c.key] === undefined) {
+          // If we have resumeText, we can run the match engine on it!
+          let textToMatch = cand.summary + " " + cand.title;
+          if (cand.rawText) {
+            textToMatch = cand.rawText;
+          }
+          
+          let matched = false;
+          let matchedKeyword = "";
+          for (const kw of c.keywords) {
+            const regex = new RegExp("\\b" + kw.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "\\b", "i");
+            if (regex.test(textToMatch)) {
+              matched = true;
+              matchedKeyword = kw;
+              break;
+            }
+          }
+          
+          cand.criteriaMatches[c.key] = matched;
+          cand.justifications[c.key] = matched ? `Matched keyword: "${matchedKeyword}"` : "No keywords matched.";
+        }
+      });
+    });
+    
+    saveAppState();
+    renderFilters();
+    renderCandidates();
+    showStatus(`Successfully added ${addedCount} criteria from job description!`, "success");
+  }
+  
+  closeJdModal();
+}
+
 // Initial load
 initAppState();
 renderJobTabs();
